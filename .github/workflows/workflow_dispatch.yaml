@@ -1,0 +1,30 @@
+name: Deploy EC2 via Terraform Cloud
+
+on:
+  workflow_dispatch:   # ✅ This is the manual trigger
+  push:
+    branches:
+      - main           # ✅ optional auto trigger
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    env:
+      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
