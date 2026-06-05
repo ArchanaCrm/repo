@@ -1,30 +1,36 @@
 name: Deploy EC2 via Terraform Cloud
 
 on:
-  workflow_dispatch:   # ✅ This is the manual trigger
-  push:
-    branches:
-      - main           # ✅ optional auto trigger
+  workflow_dispatch:
+    inputs:
+      instance_type:
+        description: "EC2 instance type"
+        required: true
+        default: "t2.micro"
+      instance_name:
+        description: "EC2 name"
+        required: true
+        default: "Port-EC2"
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
 
-    env:
-      TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Set Terraform Token
+        run: echo "TF_TOKEN_app_terraform_io=${{ secrets.TF_API_TOKEN }}" >> $GITHUB_ENV
+
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Plan
-        run: terraform plan
-
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: |
+          terraform apply -auto-approve \
+          -var="instance_type=${{ github.event.inputs.instance_type }}" \
+          -var="instance_name=${{ github.event.inputs.instance_name }}"

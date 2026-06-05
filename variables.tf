@@ -1,4 +1,7 @@
 variable "instance_type" {
-  type    = string
-  default = "t2.micro"
+  type = string
+}
+
+variable "instance_name" {
+  type = string
 }
