@@ -11,6 +11,9 @@ on:
         description: "EC2 name"
         required: true
         default: "Port-EC2"
+  push:
+    branches:
+      - main   # ✅ ADD THIS BACK
 
 jobs:
   terraform:
