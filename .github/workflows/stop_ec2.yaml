@@ -1,0 +1,15 @@
+name: Stop EC2
+
+on:
+  workflow_dispatch:
+    inputs:
+      instance_id:
+        required: true
+
+jobs:
+  stop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stop EC2
+        run: |
+          aws ec2 stop-instances --instance-ids ${{ github.event.inputs.instance_id }}
