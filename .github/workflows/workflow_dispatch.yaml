@@ -45,7 +45,7 @@ jobs:
           -var="instance_name=${{ github.event.inputs.instance_name }}"
       
       - name: Debug Token
-        run: echo ${PORT_API_KEY}
+        run: echo ${#PORT_API_KEY}
 
       - name: Send EC2 to Port
         run: |
