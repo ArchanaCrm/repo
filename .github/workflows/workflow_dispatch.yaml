@@ -43,11 +43,10 @@ jobs:
           terraform apply -auto-approve \
           -var="instance_type=${{ github.event.inputs.instance_type }}" \
           -var="instance_name=${{ github.event.inputs.instance_name }}"
-      
-      - name: Debug Token
-        run: echo ${#PORT_API_KEY}
 
-      - name: Send EC2 to Port
+      - name: Send EC2 to Port        
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
         run: |
           curl -X POST https://api.getport.io/v1/blueprints/ec2_instance/entities \
           -H "Authorization: Bearer $PORT_API_KEY" \
