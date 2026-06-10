@@ -12,4 +12,5 @@ jobs:
     steps:
       - name: Stop EC2
         run: |
-          aws ec2 stop-instances --instance-ids ${{ github.event.inputs.instance_id }}
+          aws ec2 stop-instances --instance-ids ${{ github.event.inputs.instance_id }} \
+          --region us-east-2
