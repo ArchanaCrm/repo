@@ -44,6 +44,9 @@ jobs:
           -var="instance_type=${{ github.event.inputs.instance_type }}" \
           -var="instance_name=${{ github.event.inputs.instance_name }}"
       
+      - name: Debug Token
+        run: echo ${PORT_API_KEY}
+
       - name: Send EC2 to Port
         run: |
           curl -X POST https://api.getport.io/v1/blueprints/ec2_instance/entities \
