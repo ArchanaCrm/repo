@@ -9,8 +9,13 @@ on:
 jobs:
   stop:
     runs-on: ubuntu-latest
-    steps:
+    steps:      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
       - name: Stop EC2
         run: |
-          aws ec2 stop-instances --instance-ids ${{ github.event.inputs.instance_id }} \
-          --region us-east-2
+          aws ec2 stop-instances --instance-ids ${{ github.event.inputs.instance_id }}
