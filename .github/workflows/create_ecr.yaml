@@ -34,7 +34,7 @@ jobs:
           --repository-name ${{ github.event.inputs.repository_name }} \
           --image-scanning-configuration scanOnPush=${{ github.event.inputs.scan_on_push }} \
           --image-tag-mutability ${{ github.event.inputs.tag_mutability }} \
-          --region us-east-1
+          --region us-east-2
 
       - name: Get Repo URI
         id: repo
