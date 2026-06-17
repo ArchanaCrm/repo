@@ -6,8 +6,8 @@ on:
       instance_id:
         required: true
   push:
-  branches:
-    - main 
+    branches:
+      - main 
 
 jobs:
   stop:

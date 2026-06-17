@@ -10,8 +10,8 @@ on:
       tag_mutability:
         required: true
   push:
-  branches:
-    - main 
+    branches:
+      - main 
 
 jobs:
   create-ecr:
