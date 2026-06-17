@@ -1,0 +1,63 @@
+name: Create ECR Repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository_name:
+        required: true
+      scan_on_push:
+        required: true
+      tag_mutability:
+        required: true
+
+jobs:
+  create-ecr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Debug Input
+        run: |
+          echo "Repo: ${{ github.event.inputs.repository_name }}"
+          echo "Scan: ${{ github.event.inputs.scan_on_push }}"
+          echo "Tag: ${{ github.event.inputs.tag_mutability }}"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Create ECR Repo
+        run: |
+          aws ecr create-repository \
+          --repository-name ${{ github.event.inputs.repository_name }} \
+          --image-scanning-configuration scanOnPush=${{ github.event.inputs.scan_on_push }} \
+          --image-tag-mutability ${{ github.event.inputs.tag_mutability }} \
+          --region us-east-1
+
+      - name: Get Repo URI
+        id: repo
+        run: |
+          URI=$(aws ecr describe-repositories \
+          --repository-names ${{ github.event.inputs.repository_name }} \
+          --query "repositories[0].repositoryUri" \
+          --output text)
+          echo "REPO_URI=$URI" >> $GITHUB_ENV
+
+      - name: Send ECR to Port
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X POST https://api.getport.io/v1/blueprints/ecr_repository/entities \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "identifier": "${{ github.run_id }}",
+            "title": "${{ github.event.inputs.repository_name }}",
+            "properties": {
+              "repository_name": "${{ github.event.inputs.repository_name }}",
+              "repository_uri": "$REPO_URI",
+              "status": "created"
+            }
+          }'
