@@ -43,7 +43,7 @@ jobs:
         env:
           PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
         run: |
-          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.run_id }}/log \
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.run_id }}/logs \
           -H "Authorization: Bearer $PORT_API_KEY" \
           -H "Content-Type: application/json" \
           -d '{
@@ -63,7 +63,7 @@ jobs:
         env:
           PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
         run: |
-          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.run_id }}/log \
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.run_id }}/logs  \
           -H "Authorization: Bearer $PORT_API_KEY" \
           -H "Content-Type: application/json" \
           -d '{
