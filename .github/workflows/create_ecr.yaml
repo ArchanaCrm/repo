@@ -9,6 +9,9 @@ on:
         required: true
       tag_mutability:
         required: true
+  push:
+  branches:
+    - main 
 
 jobs:
   create-ecr:
@@ -36,6 +39,17 @@ jobs:
           --image-tag-mutability ${{ github.event.inputs.tag_mutability }} \
           --region us-east-2
 
+      - name: Log progress
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.run_id }}/log \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "message": "Creating ECR repository..."
+          }'
+
       - name: Get Repo URI
         id: repo
         run: |
@@ -44,6 +58,17 @@ jobs:
           --query "repositories[0].repositoryUri" \
           --output text)
           echo "REPO_URI=$URI" >> $GITHUB_ENV
+
+      - name: Send logs to Port
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.run_id }}/log \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "message": "ECR repository created successfully ✅"
+          }'
 
       - name: Send ECR to Port
         env:
@@ -61,3 +86,21 @@ jobs:
               "status": "created"
             }
           }'
+
+      - name: Report success to Port
+        if: success()
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.run_id }}/complete \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json"
+
+      - name: Report failure to Port
+        if: failure()
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.run_id }}/fail \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json"
