@@ -1,0 +1,66 @@
+name: Update EC2 Instance
+
+on:
+  workflow_dispatch:
+    inputs:
+      instance_id:
+        required: true
+      instance_type:
+        required: true
+  push:
+    branches:
+      - main
+jobs:
+  update-ec2:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Debug Inputs
+        run: |
+          echo "Instance ID: ${{ github.event.inputs.instance_id }}"
+          echo "New Type: ${{ github.event.inputs.instance_type }}"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # ✅ Stop instance first
+      - name: Stop Instance
+        run: |
+          aws ec2 stop-instances \
+          --instance-ids ${{ github.event.inputs.instance_id }}
+
+      # ✅ Wait until stopped
+      - name: Wait until stopped
+        run: |
+          aws ec2 wait instance-stopped \
+          --instance-ids ${{ github.event.inputs.instance_id }}
+
+      # ✅ Modify instance type
+      - name: Modify Instance Type
+        run: |
+          aws ec2 modify-instance-attribute \
+          --instance-id ${{ github.event.inputs.instance_id }} \
+          --instance-type "{\"Value\": \"${{ github.event.inputs.instance_type }}\"}"
+
+      # ✅ Start instance again
+      - name: Start Instance
+        run: |
+          aws ec2 start-instances \
+          --instance-ids ${{ github.event.inputs.instance_id }}
+
+      - name: Update in Port
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X PATCH https://api.getport.io/v1/blueprints/ec2_instance/entities/${{ github.event.inputs.instance_id }} \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "properties": {
+              "instance_type": "${{ github.event.inputs.instance_type }}"
+            }
+          }'          
