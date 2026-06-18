@@ -98,8 +98,10 @@ jobs:
         env:
           PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
         run: |
-          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/complete \
-          -H "Authorization: Bearer $PORT_API_KEY"
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }} \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"status": "success"}'
 
       # ✅ Mark failure
       - name: Mark failure
@@ -107,5 +109,7 @@ jobs:
         env:
           PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
         run: |          
-          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/fail \
-          -H "Authorization: Bearer $PORT_API_KEY"
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }} \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"status": "failure"}'
