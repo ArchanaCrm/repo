@@ -4,16 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       instance_type:
-        description: "EC2 instance type"
         required: true
         default: "t2.micro"
       instance_name:
-        description: "EC2 name"
         required: true
         default: "Port-EC2"
-  push:
-    branches:
-      - main
+      port_run_id:
+        required: true
 
 jobs:
   terraform:
@@ -23,11 +20,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ✅ Log start
+      - name: Log start
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/logs \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"message": "Starting EC2 creation..."}'
+
+      # ✅ Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Set Terraform Token
         run: echo "TF_TOKEN_app_terraform_io=${{ secrets.TF_API_TOKEN }}" >> $GITHUB_ENV
+
+      # ✅ Log before creation
+      - name: Log before creation
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/logs \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"message": "Creating EC2 instance via Terraform..."}'
 
       - name: Terraform Init
         run: terraform init
@@ -36,7 +54,7 @@ jobs:
         run: |
           terraform plan \
           -var="instance_type=${{ github.event.inputs.instance_type }}" \
-          -var="instance_name=${{ github.event.inputs.instance_name }}" 
+          -var="instance_name=${{ github.event.inputs.instance_name }}"
 
       - name: Terraform Apply
         run: |
@@ -44,7 +62,20 @@ jobs:
           -var="instance_type=${{ github.event.inputs.instance_type }}" \
           -var="instance_name=${{ github.event.inputs.instance_name }}"
 
-      - name: Send EC2 to Port        
+      # ✅ Log success
+      - name: Log success step
+        if: success()
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/logs \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"message": "EC2 instance created successfully ✅"}'
+
+      # ✅ Send to catalog
+      - name: Send EC2 to Port
+        if: success()
         env:
           PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
         run: |
@@ -60,22 +91,21 @@ jobs:
               "status": "running"
             }
           }'
-          
-      - name: Report success to Port
+
+      # ✅ Mark success
+      - name: Mark success
         if: success()
         env:
           PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
         run: |
-          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.run_id }}/complete \
-          -H "Authorization: Bearer $PORT_API_KEY" \
-          -H "Content-Type: application/json"
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/complete \
+          -H "Authorization: Bearer $PORT_API_KEY"
 
-      - name: Report failure to Port
+      # ✅ Mark failure
+      - name: Mark failure
         if: failure()
         env:
           PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
-        run: |
-          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.run_id }}/fail \
-          -H "Authorization: Bearer $PORT_API_KEY" \
-          -H "Content-Type: application/json"
-
+        run: |          
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/fail \
+          -H "Authorization: Bearer $PORT_API_KEY"

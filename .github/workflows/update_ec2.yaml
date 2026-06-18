@@ -7,9 +7,9 @@ on:
         required: true
       instance_type:
         required: true
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
 jobs:
   update-ec2:
     runs-on: ubuntu-latest

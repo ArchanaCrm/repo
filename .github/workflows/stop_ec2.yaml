@@ -5,9 +5,9 @@ on:
     inputs:
       instance_id:
         required: true
-  push:
-    branches:
-      - main 
+  # push:
+  #   branches:
+  #     - main 
 
 jobs:
   stop:
