@@ -68,7 +68,7 @@ jobs:
         env:
           PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
         run: |
-          curl -X PATCH https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/logs \
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/logs \
           -H "Authorization: Bearer $PORT_API_KEY" \
           -H "Content-Type: application/json" \
           -d '{"message": "EC2 instance created successfully ✅"}'
@@ -109,7 +109,7 @@ jobs:
         env:
           PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
         run: |          
-          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }} \
+          curl -X PATCH https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }} \
           -H "Authorization: Bearer $PORT_API_KEY" \
           -H "Content-Type: application/json" \
           -d '{"status": "failure"}'
