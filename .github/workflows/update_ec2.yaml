@@ -7,6 +7,8 @@ on:
         required: true
       instance_type:
         required: true
+      port_run_id:
+        required: true
   # push:
   #   branches:
   #     - main
@@ -39,6 +41,16 @@ jobs:
           aws ec2 wait instance-stopped \
           --instance-ids ${{ github.event.inputs.instance_id }}
 
+      # ✅ Log start
+      - name: Log start
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/logs \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"message": "Updating EC2 creation..."}'
+
       # ✅ Modify instance type
       - name: Modify Instance Type
         run: |
@@ -52,6 +64,17 @@ jobs:
           aws ec2 start-instances \
           --instance-ids ${{ github.event.inputs.instance_id }}
 
+      # ✅ Log success
+      - name: Log success step
+        if: success()
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X POST https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }}/logs \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"message": "EC2 instance updated successfully ✅"}'
+
       - name: Update in Port
         env:
           PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
@@ -63,4 +86,26 @@ jobs:
             "properties": {
               "instance_type": "${{ github.event.inputs.instance_type }}"
             }
-          }'          
+          }'
+
+      # ✅ Mark success
+      - name: Mark success
+        if: success()
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |
+          curl -X PATCH https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }} \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"status": "SUCCESS"}'
+
+      # ✅ Mark failure
+      - name: Mark failure
+        if: failure()
+        env:
+          PORT_API_KEY: ${{ secrets.PORT_API_KEY }}
+        run: |          
+          curl -X PATCH https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }} \
+          -H "Authorization: Bearer $PORT_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"status": "FAILURE"}'
