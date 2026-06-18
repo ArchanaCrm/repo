@@ -101,7 +101,7 @@ jobs:
           curl -X PATCH https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }} \
           -H "Authorization: Bearer $PORT_API_KEY" \
           -H "Content-Type: application/json" \
-          -d '{"status": "success"}'
+          -d '{"status": "SUCCESS"}'
 
       # ✅ Mark failure
       - name: Mark failure
@@ -112,4 +112,4 @@ jobs:
           curl -X PATCH https://api.getport.io/v1/actions/runs/${{ github.event.inputs.port_run_id }} \
           -H "Authorization: Bearer $PORT_API_KEY" \
           -H "Content-Type: application/json" \
-          -d '{"status": "failure"}'
+          -d '{"status": "FAILURE"}'
